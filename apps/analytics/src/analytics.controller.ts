@@ -5,8 +5,19 @@ import { AnalyticsService } from './analytics.service';
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
-  @Get('hello')
-  getHello() {
-    return this.analyticsService.getHello();
+  @Get('{code}')
+  getClickAnalytics(@Param('code') code: string) {
+    return this.analyticsService.getClickAnalytics(code);
   }
+
+  @Get('health')
+  health() {
+    return this.analyticsService.health();
+  }
+
+  @Get('dashboard')
+  dashboard() {
+    return this.analyticsService.dashboard();
+  }
+  
 }

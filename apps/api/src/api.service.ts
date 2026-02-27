@@ -1,8 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Get, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ApiService {
-  getHello(): string {
-    return 'Hello World from api service';
-  }
+  
+    shortenURL(url: string) {
+    }
+  
+    getOriginalURL(code: string) {
+    }
+  
+    health() {
+    }
+  
+    metrics() {
+    }
+
 }
