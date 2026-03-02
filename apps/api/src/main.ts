@@ -3,7 +3,8 @@ import { ApiModule } from './api.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiModule);
-  await app.listen(3001);
-  console.log('API service running on port 3001');
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
+  console.log(`API service running on port ${port}`);
 }
 bootstrap();
