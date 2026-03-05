@@ -16,6 +16,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
       synchronize: true, // Disable in production
+      ssl: {
+        rejectUnauthorized: false,
+      },
     }),
   ],
 })
