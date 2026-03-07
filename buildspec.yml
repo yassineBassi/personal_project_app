@@ -11,6 +11,8 @@ phases:
       - echo "insalling tools"
       - aws --version
       - docker --version
+      - echo "$SERVICE_NAME"
+      - echo "$REPO_NAME"
 
   pre_build:
     commands: 
