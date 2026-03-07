@@ -2,8 +2,9 @@
 version: 0.2
 env: 
   variables: 
-    IMAGE_NAME: gateway
-    
+    SERVICE_NAME:
+    REPO_NAME:
+
 phases: 
   install:
     commands: 
@@ -28,14 +29,14 @@ phases:
   build:
     commands:
       - echo "Building Docker image"
-      - docker build --build-env APP_NAME $APP_NAME -t $IMAGE_NAME .
-      
-      - IMAGE_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME/$IMAGE_NAME
+
+      - IMAGE_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME/$SERVICE_NAME
       - echo "$IMAGE_URI"
 
-      - docker tag $IMAGE_NAME $IMAGE_URI:latest
-      - docker tag $IMAGE_NAME $IMAGE_URI:$COMMIT_HASH
+      - docker build --build-env APP_NAME $SERVICE_NAME -t $IMAGE_URI .
 
+      - docker tag $IMAGE_URI $IMAGE_URI:latest
+      - docker tag $IMAGE_URI $IMAGE_URI:$COMMIT_HASH
 
   post_build:
     commands: 
@@ -44,7 +45,7 @@ phases:
 
       - echo "Create task definition revision"
       - cp image-definition-template.json imagedefinitions.json
-      - sed -i "s|<CONTAINER_NAME>|$IMAGE_NAME|g" imagedefinitions.json
+      - sed -i "s|<CONTAINER_NAME>|$SERVICE_NAME|g" imagedefinitions.json
       - sed -i "s|<IMAGE_URI>|$IMAGE_URI:latest|g" imagedefinitions.json
       - cat imagedefinitions.json
       
