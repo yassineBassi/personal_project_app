@@ -1,4 +1,4 @@
-import { All, Controller, Get, HttpStatus, Req, Res } from '@nestjs/common';
+import { All, Controller, Get, HttpStatus, Logger, Req, Res } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import type { Request, Response } from 'express';
 import { firstValueFrom } from 'rxjs';
@@ -12,6 +12,8 @@ const SERVICES = {
 
 @Controller()
 export class GatewayController {
+  private readonly logger = new Logger(GatewayController.name);
+
   constructor(private readonly httpService: HttpService, private readonly gatewayService: GatewayService) {}
 
   @Get('/health')
@@ -26,15 +28,15 @@ export class GatewayController {
 
   @All('analytics/*')
   async forwardToAnalytics(@Req() req: Request, @Res() res: Response) {
-    console.log('Forwarding to analytics:', SERVICES.analytics);
+    this.logger.log(`Forwarding to analytics: ${SERVICES.analytics}`);
     return this.forward(req, res, SERVICES.analytics);
   }
 
   private async forward(req: Request, res: Response, baseUrl: string) {
-    let msPath = "/" + req.path.split('/').slice(2).join('/');
+    const msPath = '/' + req.path.split('/').slice(2).join('/');
     const url = `${baseUrl}${msPath}`;
-    console.log("Making request to:", url)
-    try{
+    this.logger.log(`${req.method} ${url}`);
+    try {
       const response = await firstValueFrom(
         this.httpService.request({
           method: req.method,
@@ -45,13 +47,13 @@ export class GatewayController {
         }),
       );
       res.status(response.status).json(response.data);
-    }catch(e){
-      if(!e.status){
-        console.log(e.cause)
+    } catch (e) {
+      if (!e.status) {
+        this.logger.error(`Upstream connection error: ${e.code}`, e.cause);
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(e.code);
-      }else{
-        console.log(e.response.data)
-        res.status(e.status).json(e.response.data)
+      } else {
+        this.logger.warn(`Upstream responded with ${e.status}`, e.response?.data);
+        res.status(e.status).json(e.response.data);
       }
     }
   }
