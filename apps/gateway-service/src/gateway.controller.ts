@@ -33,9 +33,14 @@ export class GatewayController {
   }
 
   private async forward(req: Request, res: Response, baseUrl: string) {
+    this.logger.log("------------------------------------------")
+
     const msPath = '/' + req.path.split('/').slice(2).join('/');
     const url = `${baseUrl}${msPath}`;
-    this.logger.log(`${req.method} ${url}`);
+
+    this.logger.log(`Gateway request - ${req.method} ${url}`);    
+    this.logger.log("Request Headers", req.headers)
+    
     try {
       const response = await firstValueFrom(
         this.httpService.request({

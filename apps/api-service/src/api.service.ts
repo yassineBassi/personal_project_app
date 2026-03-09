@@ -62,8 +62,7 @@ export class ApiService {
 
   async getOriginalURL(code: string, request: Request) {
     this.logger.log(`Resolving URL for code: ${code}`);
-
-    console.log(request.headers);
+    this.logger.log("Request Headers", request.headers)
 
     const cached = await this.cacheManager.get<string>(code);
     if (cached) {
