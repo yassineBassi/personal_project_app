@@ -23,6 +23,7 @@
     "test:e2e": "jest --config ./apps/app/test/jest-e2e.json"
   },
   "dependencies": {
+    "@aws-sdk/client-sqs": "^3.1004.0",
     "@keyv/redis": "^5.1.6",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/cache-manager": "^3.1.0",

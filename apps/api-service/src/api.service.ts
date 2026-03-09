@@ -5,16 +5,25 @@ import { Repository } from 'typeorm';
 import { v4 as UUID } from 'uuid';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { ConfigService } from '@nestjs/config';
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
+import { Request } from 'express';
 
 @Injectable()
 export class ApiService {
 
   private readonly logger = new Logger(ApiService.name);
+  private sqsClient: SQSClient;
 
   constructor(
     @InjectRepository(Url) private urlsRepository: Repository<Url>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+    @Inject() private readonly configService: ConfigService
+  ) {
+    this.sqsClient = new SQSClient({
+      region: configService.get('AWS_REGION'),
+    });
+  }
 
   async shortenURL(url: string) {
     this.logger.log(`Shortening URL: ${url}`);
@@ -33,30 +42,39 @@ export class ApiService {
     };
   }
 
-  async incrementClickCount(code: string) {
+  async incrementClickCount(code: string, request: Request) {
+    const url = this.configService.get('CLICKS_QUEUE_URL');
+
+    this.logger.log('SQS Url : ', url)
+
     const urlObject = await this.urlsRepository.findOne({where: {code}});
     if(urlObject){
-      urlObject.clickCount += 1;
-      await this.urlsRepository.save(urlObject);
-      this.logger.debug(`Click count incremented for code: ${code} -> ${urlObject.clickCount}`);
+      const command = new SendMessageCommand({
+        QueueUrl: url,
+        MessageBody: JSON.stringify({code, timestamp: new Date()})
+      });
+      const response = await this.sqsClient.send(command);
+      console.log(response)
     }
-    
+
     return urlObject;
   }
 
-  async getOriginalURL(code: string) {
+  async getOriginalURL(code: string, request: Request) {
     this.logger.log(`Resolving URL for code: ${code}`);
+
+    console.log(request.headers);
 
     const cached = await this.cacheManager.get<string>(code);
     if (cached) {
       this.logger.debug(`Cache hit for code: ${code}`);
-      this.incrementClickCount(code);
+      this.incrementClickCount(code, request);
       return cached;
     }
 
     this.logger.debug(`Cache miss for code: ${code}`);
 
-    const urlObject = await this.incrementClickCount(code);
+    const urlObject = await this.incrementClickCount(code, request);
 
     if(!urlObject){
       this.logger.warn(`URL not found for code: ${code}`);

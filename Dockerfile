@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM 547323802553.dkr.ecr.us-east-1.amazonaws.com/node:latest AS builder
 
 ARG APP_NAME
 WORKDIR /app
@@ -9,7 +9,7 @@ RUN npm install
 COPY . .
 RUN npm run build $APP_NAME
 
-FROM node:20-alpine
+FROM 547323802553.dkr.ecr.us-east-1.amazonaws.com/node:latest
 
 ARG APP_NAME
 WORKDIR /app

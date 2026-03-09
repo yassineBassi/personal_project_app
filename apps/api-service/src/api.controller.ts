@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { ApiService } from './api.service';
+import type { Request } from 'express';
 
 @Controller()
 export class ApiController {
@@ -17,13 +18,11 @@ export class ApiController {
 
   @Get('metrics')
   metrics() {
-    console.log('metrics called');
     return this.apiService.metrics();
   }
 
   @Get(':code')
-  getOriginalURL(@Param('code') code: string) {
-    console.log('code is: ', code);
-    return this.apiService.getOriginalURL(code);
+  getOriginalURL(@Param('code') code: string, @Req() request: Request) {
+    return this.apiService.getOriginalURL(code, request);
   }
 }
