@@ -5,7 +5,7 @@ import { AnalyticsService } from './analytics.service';
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
-  @Get('{code}')
+  @Get(':code')
   getClickAnalytics(@Param('code') code: string) {
     return this.analyticsService.getClickAnalytics(code);
   }
