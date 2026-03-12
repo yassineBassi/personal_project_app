@@ -107,9 +107,11 @@ export class AnalyticsService {
     ]);
 
     const uniqueVisitors = parseInt(uniqueVisitorsRaw?.count ?? '0');
-    const growthRate = clicksPrev24h === 0
+    const growthRate = clicksPrev24h === 0 && clicksLast24h === 0
       ? null
-      : Number(((clicksLast24h - clicksPrev24h) / clicksPrev24h * 100).toFixed(1));
+      : clicksPrev24h === 0
+        ? 100
+        : Number(((clicksLast24h - clicksPrev24h) / clicksPrev24h * 100).toFixed(1));
 
     return {
       summary: {
