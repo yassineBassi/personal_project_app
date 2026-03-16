@@ -1,4 +1,4 @@
-FROM 547323802553.dkr.ecr.us-east-1.amazonaws.com/node:latest AS builder
+FROM public.ecr.aws/docker/library/node:18 AS builder
 
 ARG APP_NAME
 WORKDIR /app
@@ -9,7 +9,7 @@ RUN npm install
 COPY . .
 RUN npm run build $APP_NAME
 
-FROM 547323802553.dkr.ecr.us-east-1.amazonaws.com/node:latest
+FROM public.ecr.aws/docker/library/node:18
 
 ARG APP_NAME
 WORKDIR /app
