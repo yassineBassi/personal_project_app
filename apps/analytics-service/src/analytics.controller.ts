@@ -16,7 +16,7 @@ export class AnalyticsController {
     return this.analyticsService.dashboard();
   }
 
-  @Get(':code')
+  @Get(':code([a-zA-Z0-9]{8})')
   getClickAnalytics(@Param() params: CodeParamDto) {
     return this.analyticsService.getClickAnalytics(params.code);
   }

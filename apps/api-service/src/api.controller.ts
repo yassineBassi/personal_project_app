@@ -8,19 +8,18 @@ import { CodeParamDto } from './dto/code-param.dto';
 export class ApiController {
   constructor(private readonly apiService: ApiService) {}
 
+  @Get('health')
+  health() {
+    return this.apiService.health();
+  }
+
   @Post('shorten')
   shortenURL(@Body() body: ShortenUrlDto) {
     return this.apiService.shortenURL(body.url);
   }
 
-  @Get(':code')
+  @Get(':code([a-zA-Z0-9]{8})')
   getOriginalURL(@Param() params: CodeParamDto, @Req() request: Request) {
     return this.apiService.getOriginalURL(params.code, request);
-  }
-  
-
-  @Get('health')
-  health() {
-    return this.apiService.health();
   }
 }
