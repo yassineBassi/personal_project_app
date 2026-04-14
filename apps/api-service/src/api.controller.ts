@@ -23,9 +23,4 @@ export class ApiController {
   health() {
     return this.apiService.health();
   }
-
-  @Get('metrics')
-  metrics() {
-    return this.apiService.metrics();
-  }
 }
