@@ -3,8 +3,6 @@ import { UrlClick } from '@app/database/entities/url_click.entity';
 import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import type { Counter, Histogram } from 'prom-client';
 
 @Injectable()
 export class AnalyticsService {
@@ -14,19 +12,13 @@ export class AnalyticsService {
   constructor(
     @InjectRepository(Url) private readonly urlRepository: Repository<Url>,
     @InjectRepository(UrlClick) private readonly urlClickRepository: Repository<UrlClick>,
-    @InjectMetric('analytics_requests_total') private readonly requestsCounter: Counter<string>,
-    @InjectMetric('analytics_request_duration_seconds') private readonly requestDuration: Histogram<string>,
   ) {}
 
   async getClickAnalytics(code: string) {
     this.logger.log('---------------------------------------');
     this.logger.log('Get click analytics for url code : ' + code);
 
-    this.requestsCounter.inc({ endpoint: 'click_analytics' });
-    const stopTimer = this.requestDuration.startTimer({ endpoint: 'click_analytics' });
-
     const urlObject = await this.urlRepository.findOne({where: {code}, relations: ['clicks']});
-    stopTimer();
 
     this.logger.log('Url object : ', urlObject);
     if(!urlObject){
@@ -44,9 +36,6 @@ export class AnalyticsService {
   }
 
   async dashboard() {
-    this.requestsCounter.inc({ endpoint: 'dashboard' });
-    const stopTimer = this.requestDuration.startTimer({ endpoint: 'dashboard' });
-
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
@@ -135,8 +124,6 @@ export class AnalyticsService {
         .orderBy('count', 'DESC')
         .getRawMany(),
     ]);
-
-    stopTimer();
 
     const uniqueVisitors = parseInt(uniqueVisitorsRaw?.count ?? '0');
     const growthRate = clicksPrev24h === 0 && clicksLast24h === 0
