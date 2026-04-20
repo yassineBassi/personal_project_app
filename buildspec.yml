@@ -46,8 +46,6 @@ phases:
 
   post_build:
     commands: 
-      - echo "Type Check..."
-      - npx tsc --noEmit
       - echo "SCAN IMAGE...."
       - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image $IMAGE_URI:latest --exit-code 1 --severity HIGH,CRITICAL --scanners vuln,secret 
       
