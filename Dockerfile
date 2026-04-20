@@ -14,7 +14,9 @@ FROM public.ecr.aws/docker/library/node:22-alpine
 ARG APP_NAME
 WORKDIR /app
 
-COPY package.json package-lock.json ./ 
+RUN npm install -g npm@11.12.1
+
+COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist/apps/$APP_NAME ./dist
