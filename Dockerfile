@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:21-alpine3.18 AS builder
+FROM public.ecr.aws/docker/library/node:22-alpine AS builder
 
 ARG APP_NAME
 WORKDIR /app
@@ -9,7 +9,7 @@ RUN npm install
 COPY . .
 RUN npm run build $APP_NAME
 
-FROM public.ecr.aws/docker/library/node:21-alpine3.18
+FROM public.ecr.aws/docker/library/node:22-alpine
 
 ARG APP_NAME
 WORKDIR /app
