@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:22-alpine AS builder
+FROM public.ecr.aws/docker/library/node:23-alpine AS builder
 
 ARG APP_NAME
 WORKDIR /app
@@ -9,12 +9,10 @@ RUN npm ci
 COPY . .
 RUN npm run build $APP_NAME
 
-FROM public.ecr.aws/docker/library/node:22-alpine
+FROM public.ecr.aws/docker/library/node:23-alpine
 
 ARG APP_NAME
 WORKDIR /app
-
-RUN npm install -g npm@11.12.1
 
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
