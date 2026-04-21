@@ -1,6 +1,7 @@
 vulnerabilities:
-  id: CVE-2026-33671
-  expires: 2026-05-01
-  reason: "Not yet fixed in node:alpine : Picomatch: Regular Expression Denial of Service "
-  paths: 
-    - usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules/picomatch/package.json
+  - id: CVE-2026-33671
+    expires: 2026-05-01
+    reason: "Not yet fixed in node:alpine : Picomatch: Regular Expression Denial of Service "
+    paths: 
+      - usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules/picomatch/package.json
+      
