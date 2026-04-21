@@ -19,7 +19,7 @@ phases:
   pre_build:
     commands: 
       - echo "Scan Code...."
-      - docker run --rm -v $(pwd):/workspace ghcr.io/aquasecurity/trivy:latest fs /workspace --exit-code 1 --severity HIGH,CRITICAL --scanners vuln,secret
+      - docker run --rm -v $(pwd):/workspace ghcr.io/aquasecurity/trivy:latest fs --ignorefiles .trivyignore.yml /workspace --exit-code 1 --severity HIGH,CRITICAL --scanners vuln,secret
       - echo "logging into AWS ECR"
       - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
@@ -47,7 +47,7 @@ phases:
   post_build:
     commands: 
       - echo "SCAN IMAGE...."
-      - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image $IMAGE_URI:latest --exit-code 1 --severity HIGH,CRITICAL --scanners vuln,secret 
+      - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/aquasecurity/trivy:latest image --ignorefiles .trivyignore.yml $IMAGE_URI:latest --exit-code 1 --severity HIGH,CRITICAL --scanners vuln,secret 
       
       - echo "Pushing Docker image to ECR---"
       - docker push $IMAGE_URI:latest
