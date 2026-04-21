@@ -18,5 +18,5 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist/apps/$APP_NAME ./dist
-UN npm install -g npm@11.12.1
+
 CMD ["node", "dist/main.js"]
