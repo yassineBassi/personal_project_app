@@ -88,7 +88,7 @@ export class ApiService {
     try {
       cached = await this.cacheManager.get<string>(code);
     } catch (err) {
-      this.logger.warn(`Cache lookup failed for code ${code}: ${err?.message}`);
+      this.logger.warn(`Cache lookup failed for code ${code}: ${err}`);
     }
 
     if (cached) {
