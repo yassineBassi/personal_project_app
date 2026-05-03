@@ -80,13 +80,20 @@ export class ApiService {
   }
 
   async getOriginalURL(code: string, request: Request) {
-    this.logger.log(`Resolving URL for code: ${code}`);
+    this.logger.log(`Resolving URL for code :: ${code}`);
 
     this.urlResolvesCounter.inc();
 
+    this.logger.log(`Check Cache for code: ${code}`);
+
     let cached: string | undefined;
     try {
-      cached = await this.cacheManager.get<string>(code);
+      cached = await Promise.race([
+        this.cacheManager.get<string>(code),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Cache lookup timed out')), 1000),
+        ),
+      ]);
     } catch (err) {
       this.logger.warn(`Cache lookup failed for code ${code}: ${err}`);
     }
@@ -98,8 +105,8 @@ export class ApiService {
       return cached;
     }
 
-    this.cacheLookupCounter.inc({ result: 'miss' });
     this.logger.debug(`Cache miss for code: ${code}`);
+    this.cacheLookupCounter.inc({ result: 'miss' });
 
     let urlObject: Url | null;
     try {
@@ -116,7 +123,12 @@ export class ApiService {
     }
 
     try {
-      await this.cacheManager.set(code, urlObject.originalUrl);
+      await Promise.race([
+        this.cacheManager.set(code, urlObject.originalUrl),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Cache set timed out')), 1000),
+        ),
+      ]);
     } catch (err) {
       this.logger.warn(`Cache set failed for code ${code}: ${err?.message}`);
     }

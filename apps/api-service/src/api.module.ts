@@ -56,6 +56,13 @@ import { PrometheusModule, makeCounterProvider, makeHistogramProvider } from '@w
         stores: [
           new KeyvRedis(
             `redis://${configService.get('REDIS_HOST')}:${configService.get('REDIS_PORT')}`,
+            {
+              socket: {
+                connectTimeout: 500,
+                reconnectStrategy: (retries: number) =>
+                  retries > 3 ? new Error('Redis unavailable') : Math.min(retries * 100, 500),
+              },
+            },
           ),
         ],
         ttl: configService.get<number>('CACHE_TTL', 3600) * 1000,
