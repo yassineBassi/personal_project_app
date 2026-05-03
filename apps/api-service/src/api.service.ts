@@ -50,7 +50,7 @@ export class ApiService {
     };
   }
 
-  async incrementClickCount(code: string, request: Request) {
+  async incrementClickCount(code: string, request: Request): Promise<Url | null> {
     const url = this.configService.get('CLICKS_QUEUE_URL');
 
     const clientIp = request.headers['x-forwarded-for'];
@@ -84,7 +84,13 @@ export class ApiService {
 
     this.urlResolvesCounter.inc();
 
-    const cached = await this.cacheManager.get<string>(code);
+    let cached: string | undefined;
+    try {
+      cached = await this.cacheManager.get<string>(code);
+    } catch (err) {
+      this.logger.warn(`Cache lookup failed for code ${code}: ${err?.message}`);
+    }
+
     if (cached) {
       this.logger.debug(`Cache hit for code: ${code}`);
       this.cacheLookupCounter.inc({ result: 'hit' });
@@ -95,15 +101,25 @@ export class ApiService {
     this.cacheLookupCounter.inc({ result: 'miss' });
     this.logger.debug(`Cache miss for code: ${code}`);
 
-    const urlObject = await this.incrementClickCount(code, request);
+    let urlObject: Url | null;
+    try {
+      urlObject = await this.incrementClickCount(code, request);
+    } catch (err) {
+      this.logger.error(`Failed to resolve URL for code ${code}: ${err?.message}`, err?.stack);
+      throw new HttpException('Failed to resolve URL', 500);
+    }
 
-    if(!urlObject){
+    if (!urlObject) {
       this.logger.warn(`URL not found for code: ${code}`);
       this.urlNotFoundCounter.inc();
       throw new HttpException('URL not found', 404);
     }
 
-    this.cacheManager.set(code, urlObject.originalUrl);
+    try {
+      await this.cacheManager.set(code, urlObject.originalUrl);
+    } catch (err) {
+      this.logger.warn(`Cache set failed for code ${code}: ${err?.message}`);
+    }
 
     const url = urlObject.originalUrl;
     this.logger.log(`Original URL for code ${code} is ${url}`);
