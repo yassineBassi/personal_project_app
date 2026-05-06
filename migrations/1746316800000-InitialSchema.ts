@@ -6,7 +6,7 @@ export class InitialSchema1746316800000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
     await queryRunner.query(`
-      CREATE TABLE "urls" (
+      CREATE TABLE IF NOT EXISTS "urls" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "originalUrl" character varying NOT NULL,
         "code" character varying(8) NOT NULL,
@@ -16,7 +16,7 @@ export class InitialSchema1746316800000 implements MigrationInterface {
       )
     `);
     await queryRunner.query(`
-      CREATE TABLE "url_clicks" (
+      CREATE TABLE IF NOT EXISTS "url_clicks" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "clientIp" character varying NOT NULL,
         "clientBrowser" character varying NOT NULL,
@@ -26,6 +26,10 @@ export class InitialSchema1746316800000 implements MigrationInterface {
         "urlId" uuid,
         CONSTRAINT "PK_url_clicks_id" PRIMARY KEY ("id")
       )
+    `);
+    await queryRunner.query(`
+      ALTER TABLE "url_clicks"
+        DROP CONSTRAINT IF EXISTS "FK_url_clicks_urlId"
     `);
     await queryRunner.query(`
       ALTER TABLE "url_clicks"
