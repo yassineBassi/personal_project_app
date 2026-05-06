@@ -81,7 +81,7 @@ export class GatewayController {
       this.requestsCounter.inc({ method: req.method, nodeIp: gatewayIp, service, status_code: String(response.status) });
       
       const contentType = response.headers['content-type'];
-      if (contentType) res.set('Content-Type', contentType);
+      if (contentType) res.set('Content-Type', `${contentType}`);
       res.status(response.status).send(response.data);
       
       this.logger.log("Response Data: " + response.data)
