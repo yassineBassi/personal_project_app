@@ -14,12 +14,12 @@ import { GatewayService } from './gateway.service';
     makeCounterProvider({
       name: 'gateway_http_requests_total',
       help: 'Total HTTP requests forwarded by the gateway',
-      labelNames: ['method', 'service', 'status_code'],
+      labelNames: ['method', 'service', 'status_code', 'nodeIp'],
     }),
     makeHistogramProvider({
       name: 'gateway_http_request_duration_seconds',
       help: 'Duration of HTTP requests forwarded by the gateway (seconds)',
-      labelNames: ['method', 'service'],
+      labelNames: ['method', 'service', 'nodeIp'],
       buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5],
     }),
   ],

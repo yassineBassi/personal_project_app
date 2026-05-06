@@ -50,7 +50,7 @@ export class ApiService {
     };
   }
 
-  async incrementClickCount(code: string, request: Request) {
+  async incrementClickCount(code: string, request: Request): Promise<Url | null> {
     const url = this.configService.get('CLICKS_QUEUE_URL');
 
     const clientIp = request.headers['x-forwarded-for'];
@@ -80,11 +80,24 @@ export class ApiService {
   }
 
   async getOriginalURL(code: string, request: Request) {
-    this.logger.log(`Resolving URL for code: ${code}`);
+    this.logger.log(`Resolving URL for code :: ${code}`);
 
     this.urlResolvesCounter.inc();
 
-    const cached = await this.cacheManager.get<string>(code);
+    this.logger.log(`Check Cache for code: ${code}`);
+
+    let cached: string | undefined;
+    try {
+      cached = await Promise.race([
+        this.cacheManager.get<string>(code),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Cache lookup timed out')), 1000),
+        ),
+      ]);
+    } catch (err) {
+      this.logger.warn(`Cache lookup failed for code ${code}: ${err}`);
+    }
+
     if (cached) {
       this.logger.debug(`Cache hit for code: ${code}`);
       this.cacheLookupCounter.inc({ result: 'hit' });
@@ -92,18 +105,33 @@ export class ApiService {
       return cached;
     }
 
-    this.cacheLookupCounter.inc({ result: 'miss' });
     this.logger.debug(`Cache miss for code: ${code}`);
+    this.cacheLookupCounter.inc({ result: 'miss' });
 
-    const urlObject = await this.incrementClickCount(code, request);
+    let urlObject: Url | null;
+    try {
+      urlObject = await this.incrementClickCount(code, request);
+    } catch (err) {
+      this.logger.error(`Failed to resolve URL for code ${code}: ${err?.message}`, err?.stack);
+      throw new HttpException('Failed to resolve URL', 500);
+    }
 
-    if(!urlObject){
+    if (!urlObject) {
       this.logger.warn(`URL not found for code: ${code}`);
       this.urlNotFoundCounter.inc();
       throw new HttpException('URL not found', 404);
     }
 
-    this.cacheManager.set(code, urlObject.originalUrl);
+    try {
+      await Promise.race([
+        this.cacheManager.set(code, urlObject.originalUrl),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Cache set timed out')), 1000),
+        ),
+      ]);
+    } catch (err) {
+      this.logger.warn(`Cache set failed for code ${code}: ${err?.message}`);
+    }
 
     const url = urlObject.originalUrl;
     this.logger.log(`Original URL for code ${code} is ${url}`);

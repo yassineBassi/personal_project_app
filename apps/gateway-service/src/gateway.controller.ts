@@ -60,7 +60,7 @@ export class GatewayController {
       ? `${existingForwardedFor}, ${gatewayIp}`
       : gatewayIp;
 
-    const stopTimer = this.requestDuration.startTimer({ method: req.method, service });
+    const stopTimer = this.requestDuration.startTimer({ method: req.method, nodeIp: gatewayIp, service });
 
     try {
       const response = await firstValueFrom(
@@ -76,24 +76,32 @@ export class GatewayController {
           params: req.query,
         }),
       );
+      
       stopTimer();
-      this.requestsCounter.inc({ method: req.method, service, status_code: String(response.status) });
+      this.requestsCounter.inc({ method: req.method, nodeIp: gatewayIp, service, status_code: String(response.status) });
+      
       const contentType = response.headers['content-type'];
       if (contentType) res.set('Content-Type', contentType);
       res.status(response.status).send(response.data);
+      
       this.logger.log("Response Data: " + response.data)
       this.logger.log("------------------------------------------")
     } catch (e) {
       stopTimer();
       if (!e.status) {
         this.logger.error(`Upstream connection error: ${e.code}`, e.cause);
-        this.requestsCounter.inc({ method: req.method, service, status_code: '503' });
+      
+        this.requestsCounter.inc({ method: req.method, nodeIp: gatewayIp, service, status_code: '503' });
+      
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(e.code);
       } else {
         this.logger.warn(`Upstream responded with ${e.status}`, e.response?.data);
-        this.requestsCounter.inc({ method: req.method, service, status_code: String(e.status) });
+      
+        this.requestsCounter.inc({ method: req.method, nodeIp: gatewayIp, service, status_code: String(e.status) });
+      
         res.status(e.status).json(e.response.data);
       }
+      
       this.logger.log("Error")
       this.logger.log("------------------------------------------")
     }

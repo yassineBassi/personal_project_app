@@ -9,7 +9,9 @@ export const databaseConfig = (configService: ConfigService): TypeOrmModuleOptio
   password: configService.get<string>('DATABASE_PASSWORD'),
   database: configService.get<string>('DATABASE_NAME'),
   autoLoadEntities: true,
-  synchronize: true, // Disable in production
+  synchronize: configService.get<string>('ENV') === 'dev',
+  migrations: ['dist/migrations/*.js'],
+  migrationsRun: configService.get<string>('ENV') !== 'dev' && configService.get<string>('RUN_MIGRATIONS') === 'true',
   ssl: {
     rejectUnauthorized: false,
   },

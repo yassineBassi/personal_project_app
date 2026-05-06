@@ -2,21 +2,26 @@
 version: 0.2
 env: 
   variables: 
+    # Variables to be injected by codepipline
     SERVICE_NAME:
     REPO_NAME:
 
 phases: 
   install:
     commands: 
-      - echo "insalling tools"
+      - echo "installing tools"
       - aws --version
       - docker --version
       - echo "$SERVICE_NAME"
       - echo "$REPO_NAME"
+      - echo "Pull Trivy Image..."
+      - docker pull ghcr.io/aquasecurity/trivy:latest
 
   pre_build:
     commands: 
-      - echo "loggin into AWS ECR"
+      - echo "Scan Code...."
+      - docker run --rm -v $(pwd):/workspace ghcr.io/aquasecurity/trivy:latest fs --ignorefile /workspace/.trivyignore.yml /workspace --exit-code 1 --severity HIGH,CRITICAL --scanners vuln,secret
+      - echo "logging into AWS ECR"
       - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
 
@@ -42,6 +47,9 @@ phases:
 
   post_build:
     commands: 
+      - echo "SCAN IMAGE...."
+      - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):/workspace ghcr.io/aquasecurity/trivy:latest image --ignorefile /workspace/.trivyignore.yml $IMAGE_URI:latest --exit-code 1 --severity HIGH,CRITICAL --scanners vuln,secret
+      
       - echo "Pushing Docker image to ECR---"
       - docker push $IMAGE_URI:latest
 

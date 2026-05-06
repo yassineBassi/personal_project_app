@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
+import { MetricsInterceptor } from './metrics.interceptor';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Url } from '@app/database';
@@ -21,6 +23,8 @@ import { PrometheusModule, makeCounterProvider, makeHistogramProvider } from '@w
   controllers: [AnalyticsController],
   providers: [
     AnalyticsService,
+    MetricsInterceptor,
+    { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor },
     makeCounterProvider({
       name: 'analytics_requests_total',
       help: 'Total number of requests to the analytics service',
